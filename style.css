@@ -1,0 +1,591 @@
+/* ================================================================
+   style.css — Happy Birthday Dorin
+   Pastel pink romantic birthday theme
+   Animations use CSS keyframes; JS only adds/removes classes.
+   ================================================================ */
+
+/* ── CSS Custom Properties ────────────────────────────────────── */
+:root {
+    --pink-pale:  #ffe4f0;
+    --pink-light: #ffccd5;
+    --pink-mid:   #ffb3c6;
+    --pink-deep:  #ff8fab;
+    --pink-rich:  #ff6b8a;
+    --rose:       #8b3a56;
+    --rose-soft:  #b05070;
+    --cream-bg:   #fff8fa;
+    --white:      #ffffff;
+    --glass-bg:   rgba(255, 255, 255, 0.22);
+    --glass-brd:  rgba(255, 255, 255, 0.55);
+    --shadow-pk:  rgba(255, 100, 130, 0.22);
+}
+
+/* ── Reset ────────────────────────────────────────────────────── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+/* ── Body — animated gradient background ─────────────────────── */
+body {
+    min-height: 100vh;
+    width: 100%;
+    background: linear-gradient(135deg,
+        #ffe4f0 0%, #ffccd5 25%,
+        #ffb3c6 50%, #ffccd5 75%, #ffe4f0 100%);
+    background-size: 300% 300%;
+    animation: bgShift 14s ease infinite;
+    font-family: 'Quicksand', 'Segoe UI', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow-x: hidden;
+}
+
+@keyframes bgShift {
+    0%, 100% { background-position: 0%   50%; }
+    50%       { background-position: 100% 50%; }
+}
+
+/* ================================================================
+   BACKGROUND CANVAS  (confetti + glow orbs — drawn by JS)
+   ================================================================ */
+#bgCanvas {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* ================================================================
+   FLOATING HEARTS  (injected by JS, animated by CSS)
+   ================================================================ */
+#heartsWrap {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    overflow: hidden;
+}
+
+/* Each heart is a <span class="heart"> with CSS vars --dur / --delay */
+.heart {
+    position: absolute;
+    bottom: -60px;
+    opacity: 0;
+    font-size: 1.3rem;
+    animation: floatHeart var(--dur, 4s) ease-in var(--delay, 0s) forwards;
+}
+
+@keyframes floatHeart {
+    0%   { opacity: 0;   transform: translateY(0)      scale(0.5) rotate(0deg);   }
+    12%  { opacity: 1;   transform: translateY(-90px)  scale(1)   rotate(-8deg);  }
+    85%  { opacity: 0.7; transform: translateY(-520px) scale(1.1) rotate(14deg);  }
+    100% { opacity: 0;   transform: translateY(-660px) scale(0.7) rotate(-6deg);  }
+}
+
+/* ================================================================
+   PAGE LAYOUT
+   ================================================================ */
+.page {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 580px;
+    padding: 20px 16px 100px; /* bottom pad for controls bar */
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ── Glassmorphism card ──────────────────────────────────────── */
+.card {
+    width: 100%;
+    background: var(--glass-bg);
+    backdrop-filter: blur(26px) saturate(1.5);
+    -webkit-backdrop-filter: blur(26px) saturate(1.5);
+    border: 1.5px solid var(--glass-brd);
+    border-radius: 40px;
+    padding: 50px 32px 58px;
+    box-shadow:
+        0 10px 48px var(--shadow-pk),
+        0 0  90px rgba(255, 180, 200, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.75);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 36px;
+    position: relative;
+    overflow: hidden;
+    /* Entrance pop */
+    animation: cardIn 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes cardIn {
+    from { opacity: 0; transform: scale(0.92) translateY(18px); }
+    to   { opacity: 1; transform: scale(1)    translateY(0);    }
+}
+
+/* Sweeping shimmer across the card */
+.card::after {
+    content: '';
+    position: absolute;
+    top: -120%;
+    left: -55%;
+    width: 45%;
+    height: 350%;
+    background: linear-gradient(
+        108deg,
+        transparent 40%,
+        rgba(255, 255, 255, 0.18) 50%,
+        transparent 60%
+    );
+    animation: cardShimmer 9s ease-in-out 1.5s infinite;
+    pointer-events: none;
+}
+
+@keyframes cardShimmer {
+    0%, 100% { transform: translateX(-100%) skewX(-15deg); }
+    50%       { transform: translateX(600%)  skewX(-15deg); }
+}
+
+/* ================================================================
+   CAKE STAGE  (absolute-positioned assembly)
+
+   Vertical layout from bottom (y=0) upward:
+     plate     h=20   bottom=0
+     tier-bot  h=90   bottom=20
+     cream-mid h=24   bottom=110
+     tier-top  h=70   bottom=134
+     cream-top h=22   bottom=204
+     candle-row        bottom=226   (candles ~68px tall)
+   Total stage height ≈ 300px
+   ================================================================ */
+.stage {
+    position: relative;
+    width: 280px;
+    height: 300px;
+    flex-shrink: 0;
+}
+
+/* ── Shared initial state for dropping cake parts ────────────── */
+/* Parts are horizontally centred via margin-left = -(width/2).  */
+/* Transform is ONLY vertical so no conflict with centering.      */
+.plate,
+.tier-bot,
+.cream-mid,
+.tier-top,
+.cream-top {
+    position: absolute;
+    left: 50%;
+    opacity: 0;
+    transform: translateY(-620px); /* starts off-screen above */
+}
+
+/* ── PLATE ───────────────────────────────────────────────────── */
+.plate {
+    width: 260px;
+    height: 20px;
+    bottom: 0;
+    margin-left: -130px;
+    background: linear-gradient(180deg, var(--cream-bg) 0%, var(--pink-mid) 100%);
+    border-radius: 50%;
+    border: 2px solid rgba(255, 200, 215, 0.55);
+    box-shadow:
+        0 6px 22px var(--shadow-pk),
+        0 2px 6px  rgba(255, 100, 130, 0.12),
+        inset 0 2px 5px rgba(255, 255, 255, 0.75);
+}
+
+/* ── BOTTOM TIER ─────────────────────────────────────────────── */
+.tier-bot {
+    width: 220px;
+    height: 90px;
+    bottom: 20px;
+    margin-left: -110px;
+    background: linear-gradient(155deg,
+        var(--pink-mid) 0%, var(--pink-deep) 52%, var(--pink-rich) 100%);
+    border-radius: 18px 18px 10px 10px;
+    box-shadow:
+        0 9px 30px rgba(255, 100, 130, 0.42),
+        0 3px 8px  rgba(255, 100, 130, 0.18),
+        inset 0 3px 0 rgba(255, 255, 255, 0.38),
+        inset 0 -3px 0 rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+}
+
+/* ── MIDDLE CREAM ────────────────────────────────────────────── */
+/* Wavy top edge via SVG clip-path path() */
+.cream-mid {
+    width: 230px;
+    height: 24px;
+    bottom: 110px;
+    margin-left: -115px;
+    background: var(--white);
+    /* 4 peaks across 230px wide cream wave */
+    clip-path: path('M0,16 Q28.75,0 57.5,16 Q86.25,0 115,16 Q143.75,0 172.5,16 Q201.25,0 230,16 L230,24 L0,24 Z');
+    filter:
+        drop-shadow(0 -3px 6px rgba(255,255,255,0.95))
+        drop-shadow(0  3px 5px rgba(255,150,170,0.22));
+}
+
+/* ── TOP TIER ────────────────────────────────────────────────── */
+.tier-top {
+    width: 178px;
+    height: 70px;
+    bottom: 134px;
+    margin-left: -89px;
+    background: linear-gradient(155deg,
+        #ffdde6 0%, var(--pink-mid) 52%, var(--pink-deep) 100%);
+    border-radius: 14px 14px 8px 8px;
+    box-shadow:
+        0 7px 22px rgba(255, 100, 130, 0.38),
+        inset 0 3px 0 rgba(255, 255, 255, 0.42),
+        inset 0 -2px 0 rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+}
+
+/* ── TOP CREAM ───────────────────────────────────────────────── */
+/* 4 peaks across 185px wide */
+.cream-top {
+    width: 185px;
+    height: 22px;
+    bottom: 204px;
+    margin-left: -92.5px;
+    background: var(--white);
+    clip-path: path('M0,14 Q23.125,0 46.25,14 Q69.375,0 92.5,14 Q115.625,0 138.75,14 Q161.875,0 185,14 L185,22 L0,22 Z');
+    filter:
+        drop-shadow(0 -2px 5px rgba(255,255,255,0.95))
+        drop-shadow(0  2px 4px rgba(255,150,170,0.2));
+}
+
+/* ── Tier decorations ─────────────────────────────────────────  */
+.tier-dots {
+    display: block;
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(circle, rgba(255,255,255,0.32) 2.5px, transparent 2.5px);
+    background-size: 18px 18px;
+    background-position: 9px 18px;
+}
+
+.tier-hearts {
+    position: absolute;
+    bottom: 10px;
+    left: 0; right: 0;
+    text-align: center;
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.65);
+    letter-spacing: 8px;
+}
+
+/* ================================================================
+   CANDLES
+   ================================================================ */
+/* Candle row — always in position, individual candles animate in */
+.candle-row {
+    position: absolute;
+    bottom: 226px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 9px;
+    align-items: flex-end;
+}
+
+/* Each candle starts invisible + off-screen above */
+.candle {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    opacity: 0;
+    transform: translateY(-500px);
+}
+
+/* ── Wax body ────────────────────────────────────────────────── */
+.wax {
+    width: 12px;
+    height: 42px;
+    border-radius: 6px 6px 4px 4px;
+}
+
+.wax-pink {
+    background: linear-gradient(to right, var(--pink-rich), var(--pink-deep), var(--pink-rich));
+    box-shadow: 0 2px 8px rgba(255, 107, 138, 0.45);
+}
+
+.wax-white {
+    background: linear-gradient(to right, #f2e8eb, var(--white), #f2e8eb);
+    border: 1px solid rgba(255, 180, 200, 0.4);
+    box-shadow: 0 2px 8px rgba(255, 150, 170, 0.22);
+}
+
+/* Candle wick */
+.wick {
+    width: 2px;
+    height: 6px;
+    background: #6b3a3a;
+    border-radius: 1px;
+}
+
+/* ── Flame ───────────────────────────────────────────────────── */
+.flame-box {
+    display: flex;
+    justify-content: center;
+    height: 26px;
+    opacity: 0;
+    transition: opacity 0.55s ease;
+}
+
+/* JS adds .lit to show the flame */
+.flame-box.lit { opacity: 1; }
+
+.flame {
+    width: 13px;
+    height: 23px;
+    background: linear-gradient(to top, #ff4500, #ff8c00, #ffd700, #fffde7);
+    border-radius: 50% 50% 32% 32% / 60% 60% 40% 40%;
+    box-shadow:
+        0 0 8px  4px rgba(255, 170, 50, 0.55),
+        0 0 22px 9px rgba(255,  80, 30, 0.22);
+    animation: flicker 0.42s ease-in-out infinite alternate;
+    transform-origin: 50% 92%;
+    position: relative;
+}
+
+/* Bright core inside the flame */
+.flame-in {
+    position: absolute;
+    width: 7px;
+    height: 14px;
+    background: linear-gradient(to top, #ffe066, #fffde7);
+    border-radius: 50% 50% 30% 30% / 60% 60% 40% 40%;
+    bottom: 3px;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0.75;
+}
+
+@keyframes flicker {
+    0%   { transform: scaleX(1)    scaleY(1)    rotate(-1.2deg); }
+    28%  { transform: scaleX(0.93) scaleY(1.05) rotate( 1.5deg); }
+    60%  { transform: scaleX(1.05) scaleY(0.95) rotate(-0.5deg); }
+    100% { transform: scaleX(0.96) scaleY(1.05) rotate( 1.2deg); }
+}
+
+/* Glow pulse when lit */
+.candle.lit .wax {
+    box-shadow:
+        0 0 14px 5px rgba(255, 200, 60, 0.28),
+        0 2px  8px    rgba(255, 100, 130, 0.32);
+    transition: box-shadow 0.5s ease;
+}
+
+/* ================================================================
+   DROP-IN ANIMATIONS (spring bounce = cubic-bezier overshoots)
+
+   The spring easing (0.34, 1.56, 0.64, 1) naturally overshoots
+   and snaps back, giving a satisfying thud / bounce landing.
+   ================================================================ */
+@keyframes partDrop {
+    from { transform: translateY(-620px); opacity: 0; }
+    to   { transform: translateY(0);      opacity: 1; }
+}
+
+@keyframes candleDrop {
+    from { transform: translateY(-480px); opacity: 0; }
+    to   { transform: translateY(0);      opacity: 1; }
+}
+
+/* JS adds these classes to trigger the animations */
+.do-drop   { animation: partDrop   0.88s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+.do-candle { animation: candleDrop 0.62s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+
+/* ================================================================
+   BIRTHDAY MESSAGE
+   ================================================================ */
+.bday {
+    text-align: center;
+    opacity: 0;
+    transform: translateY(22px);
+    transition: opacity 1.1s ease, transform 1.1s ease;
+    padding: 0 6px;
+}
+
+/* JS adds .show to reveal the message */
+.bday.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Sparkle / emoji rows */
+.sparkles {
+    font-size: 1.45rem;
+    letter-spacing: 10px;
+    margin: 6px 0;
+    animation: starPulse 2.2s ease-in-out infinite alternate;
+    display: block;
+}
+
+@keyframes starPulse {
+    from { transform: scale(1);    opacity: 0.75; }
+    to   { transform: scale(1.1);  opacity: 1;    }
+}
+
+/* "Happy Birthday Dorin" */
+.bday-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: clamp(2rem, 7.5vw, 3.1rem);
+    font-weight: 700;
+    color: var(--rose);
+    line-height: 1.25;
+    margin: 10px 0 18px;
+    animation: titleGlow 3s ease-in-out infinite alternate;
+}
+
+/* "Dorin" in italic soft pink */
+.bday-title em {
+    font-style: italic;
+    color: var(--pink-rich);
+}
+
+@keyframes titleGlow {
+    from {
+        text-shadow:
+            0 2px 8px  rgba(255, 100, 130, 0.30),
+            0 0  22px  rgba(255, 150, 180, 0.18);
+    }
+    to {
+        text-shadow:
+            0 2px 14px rgba(255, 100, 130, 0.58),
+            0 0  44px  rgba(255, 180, 200, 0.52),
+            0 0  70px  rgba(255, 150, 180, 0.16);
+    }
+}
+
+/* Typing subtitle */
+.bday-sub {
+    font-size: clamp(0.88rem, 3.2vw, 1.06rem);
+    color: var(--rose-soft);
+    line-height: 1.85;
+    font-weight: 500;
+    max-width: 370px;
+    margin: 0 auto 10px;
+    min-height: 4em;
+    white-space: pre-line; /* respect \n in the typed text */
+}
+
+/* Blinking cursor shown while typing */
+.bday-sub::after {
+    content: '|';
+    color: var(--pink-deep);
+    animation: blink 0.7s step-end infinite;
+}
+
+/* JS adds .typed to remove cursor when done */
+.bday-sub.typed::after { content: ''; }
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0; }
+}
+
+/* ================================================================
+   CONTROL BUTTONS  (fixed at bottom)
+   ================================================================ */
+.controls {
+    position: fixed;
+    bottom: 26px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 14px;
+    z-index: 200;
+}
+
+.btn {
+    background: rgba(255, 255, 255, 0.28);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1.5px solid rgba(255, 255, 255, 0.62);
+    border-radius: 50px;
+    padding: 13px 28px;
+    font-family: 'Quicksand', sans-serif;
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--rose);
+    cursor: pointer;
+    transition: background 0.3s, transform 0.2s, box-shadow 0.3s;
+    box-shadow:
+        0 4px 18px var(--shadow-pk),
+        inset 0 1px 0 rgba(255, 255, 255, 0.82);
+    letter-spacing: 0.4px;
+}
+
+.btn:hover {
+    background: rgba(255, 255, 255, 0.52);
+    transform: translateY(-3px);
+    box-shadow:
+        0 8px 26px rgba(255, 100, 130, 0.32),
+        inset 0 1px 0 rgba(255, 255, 255, 0.82);
+}
+
+.btn:active { transform: translateY(-1px); }
+
+/* Music active state */
+.btn.music-on {
+    background: rgba(255, 143, 171, 0.32);
+    border-color: rgba(255, 143, 171, 0.72);
+}
+
+/* ================================================================
+   RESPONSIVE — smaller screens
+   ================================================================ */
+@media (max-width: 480px) {
+    .card {
+        padding: 36px 18px 46px;
+        border-radius: 28px;
+        gap: 28px;
+    }
+
+    /* Shrink cake stage */
+    .stage { width: 230px; height: 255px; }
+
+    /* Rescale all positioned parts */
+    .plate    { width: 215px; margin-left: -107.5px; height: 16px; }
+    .tier-bot { width: 180px; margin-left: -90px;    height: 74px; bottom: 16px; }
+
+    .cream-mid {
+        width: 190px; margin-left: -95px; height: 20px; bottom: 90px;
+        clip-path: path('M0,13 Q23.75,0 47.5,13 Q71.25,0 95,13 Q118.75,0 142.5,13 Q166.25,0 190,13 L190,20 L0,20 Z');
+    }
+
+    .tier-top  { width: 145px; margin-left: -72.5px; height: 58px; bottom: 110px; }
+
+    .cream-top {
+        width: 152px; margin-left: -76px; height: 18px; bottom: 168px;
+        clip-path: path('M0,12 Q19,0 38,12 Q57,0 76,12 Q95,0 114,12 Q133,0 152,12 L152,18 L0,18 Z');
+    }
+
+    .candle-row { bottom: 186px; gap: 6px; }
+    .wax        { width: 10px; height: 34px; }
+
+    .bday-title { font-size: 1.7rem; }
+    .bday-sub   { font-size: 0.83rem; }
+
+    .controls { bottom: 16px; gap: 10px; }
+    .btn       { padding: 11px 20px; font-size: 0.84rem; }
+}
+
+@media (max-width: 340px) {
+    .stage { width: 200px; height: 230px; }
+    .plate { width: 188px; margin-left: -94px; }
+    .tier-bot { width: 158px; margin-left: -79px; }
+    .cream-mid { width: 166px; margin-left: -83px; }
+    .tier-top  { width: 128px; margin-left: -64px; }
+    .cream-top { width: 134px; margin-left: -67px; }
+    .candle-row { gap: 4px; }
+    .wax { width: 9px; height: 30px; }
+}

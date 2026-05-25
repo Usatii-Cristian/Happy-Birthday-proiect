@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Birthday Dorin 🎂</title>
+    <!-- Elegant typography from Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Quicksand:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- =====================================================
+         LAYER 0 — Canvas: confetti + glowing particles
+         ===================================================== -->
+    <canvas id="bgCanvas"></canvas>
+
+    <!-- =====================================================
+         LAYER 1 — Floating hearts (injected by script.js)
+         ===================================================== -->
+    <div id="heartsWrap" aria-hidden="true"></div>
+
+    <!-- =====================================================
+         LAYER 2 — Main glassmorphism card
+         ===================================================== -->
+    <main class="page">
+        <div class="card">
+
+            <!-- ============ CAKE ASSEMBLY STAGE ============
+                 Parts drop from the top one by one via JS.
+                 Order in DOM = top-to-bottom (candles → plate).
+                 Each part is position:absolute inside .stage.
+                 ============================================= -->
+            <div class="stage" id="stage">
+
+                <!-- Candles: each .candle animates individually -->
+                <div class="candle-row">
+                    <div class="candle" id="c1">
+                        <div class="flame-box" id="f1">
+                            <div class="flame"><div class="flame-in"></div></div>
+                        </div>
+                        <div class="wick"></div>
+                        <div class="wax wax-pink"></div>
+                    </div>
+                    <div class="candle" id="c2">
+                        <div class="flame-box" id="f2">
+                            <div class="flame"><div class="flame-in"></div></div>
+                        </div>
+                        <div class="wick"></div>
+                        <div class="wax wax-white"></div>
+                    </div>
+                    <div class="candle" id="c3">
+                        <div class="flame-box" id="f3">
+                            <div class="flame"><div class="flame-in"></div></div>
+                        </div>
+                        <div class="wick"></div>
+                        <div class="wax wax-pink"></div>
+                    </div>
+                    <div class="candle" id="c4">
+                        <div class="flame-box" id="f4">
+                            <div class="flame"><div class="flame-in"></div></div>
+                        </div>
+                        <div class="wick"></div>
+                        <div class="wax wax-white"></div>
+                    </div>
+                    <div class="candle" id="c5">
+                        <div class="flame-box" id="f5">
+                            <div class="flame"><div class="flame-in"></div></div>
+                        </div>
+                        <div class="wick"></div>
+                        <div class="wax wax-pink"></div>
+                    </div>
+                </div><!-- /.candle-row -->
+
+                <!-- Top cream swirl (above top tier) -->
+                <div class="cream cream-top" id="creamTop"></div>
+
+                <!-- Upper cake tier -->
+                <div class="tier tier-top" id="tierTop">
+                    <div class="tier-dots"></div>
+                </div>
+
+                <!-- Middle cream layer (between tiers) -->
+                <div class="cream cream-mid" id="creamMid"></div>
+
+                <!-- Lower cake tier -->
+                <div class="tier tier-bot" id="tierBot">
+                    <div class="tier-dots"></div>
+                    <div class="tier-hearts">♥ ♥ ♥</div>
+                </div>
+
+                <!-- Plate at the base -->
+                <div class="plate" id="plate"></div>
+
+            </div><!-- /.stage -->
+
+            <!-- ============ BIRTHDAY MESSAGE ================
+                 Fades in after the full cake is assembled.
+                 Subtitle uses JS typing animation.
+                 ============================================= -->
+            <div class="bday" id="bday">
+                <p class="sparkles" aria-hidden="true">✨ 🌸 ✨</p>
+                <h1 class="bday-title">Happy Birthday<br><em>Dorin</em></h1>
+                <p class="bday-sub" id="bdaySub"></p>
+                <p class="sparkles" aria-hidden="true">💕 🌸 💕</p>
+            </div>
+
+        </div><!-- /.card -->
+    </main>
+
+    <!-- =====================================================
+         CONTROLS — fixed at bottom of screen
+         ===================================================== -->
+    <div class="controls">
+        <button class="btn" onclick="replayAnim()">🔄 Replay</button>
+        <button class="btn" id="musicBtn" onclick="toggleMusic()">🎵 Music</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
