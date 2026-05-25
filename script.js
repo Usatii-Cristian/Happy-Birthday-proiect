@@ -19,10 +19,10 @@ function resizeCanvas() {
 resizeCanvas();
 window.addEventListener('resize', resizeCanvas);
 
-/* Pastel pink / white / red palette */
+/* Navy / gold / white palette */
 const PALETTE = [
-    '#ff8fab','#ffb3c6','#ff6b8a','#ffd6e0',
-    '#ffffff','#ffccd5','#ff4d6d','#c9184a','#ffb3de',
+    '#d4a843','#f0c866','#ffffff','#c8d8e8',
+    '#4d80c8','#1a4a96','#fef7e0','#a0c0e8','#e8c060',
 ];
 
 class Particle {
@@ -94,7 +94,7 @@ const particles = Array.from(
        Spawned periodically as <span> elements with CSS animation.
    ================================================================ */
 const heartsWrap  = document.getElementById('heartsWrap');
-const HEART_EMOJIS = ['💕','💗','💖','💝','🩷','❤️','🌸','✨'];
+const HEART_EMOJIS = ['⭐','💫','✨','🌟','💙','⚡','🔷','✦'];
 
 function spawnHeart() {
     const span = document.createElement('span');
@@ -145,7 +145,7 @@ function showMessage() {
 
 /* Typing animation — writes the subtitle character by character */
 function startTyping() {
-    const TEXT = 'May your day be filled with happiness, love\nand unforgettable moments ✨';
+    const TEXT = 'Multă sănătate, fericire și succes!\nLa mulți ani din suflet, Dorin! ⭐';
     const el   = document.getElementById('bdaySub');
     let i = 0;
     el.textContent = '';
@@ -168,21 +168,25 @@ function startAnimation() {
         [ 2400, () => dropPart('creamMid')],
         [ 3200, () => dropPart('tierTop')],
         [ 4100, () => dropPart('creamTop')],
+        /* Berries land on top cream */
+        [ 4750, () => dropPart('berryGroup')],
         /* Candles fall one by one */
-        [ 4900, () => dropCandle('c1')],
-        [ 5340, () => dropCandle('c2')],
-        [ 5780, () => dropCandle('c3')],
-        [ 6220, () => dropCandle('c4')],
-        [ 6660, () => dropCandle('c5')],
+        [ 5200, () => dropCandle('c1')],
+        [ 5640, () => dropCandle('c2')],
+        [ 6080, () => dropCandle('c3')],
+        [ 6520, () => dropCandle('c4')],
+        [ 6960, () => dropCandle('c5')],
         /* Flames light in sequence */
-        [ 7150, () => lightFlame('c1', 'f1')],
-        [ 7380, () => lightFlame('c2', 'f2')],
-        [ 7610, () => lightFlame('c3', 'f3')],
-        [ 7840, () => lightFlame('c4', 'f4')],
-        [ 8100, () => lightFlame('c5', 'f5')], /* last flame — extra glow in CSS */
+        [ 7450, () => lightFlame('c1', 'f1')],
+        [ 7680, () => lightFlame('c2', 'f2')],
+        [ 7910, () => lightFlame('c3', 'f3')],
+        [ 8140, () => lightFlame('c4', 'f4')],
+        [ 8400, () => lightFlame('c5', 'f5')],
+        /* Cake floats gently */
+        [ 8800, () => document.getElementById('stage').classList.add('assembled')],
         /* Birthday message */
-        [ 8950, showMessage],
-        [ 9900, startTyping],
+        [ 9400, showMessage],
+        [10400, startTyping],
     ];
 
     steps.forEach(([ms, fn]) => {
@@ -203,7 +207,9 @@ function replayAnim() {
        CSS default state (opacity:0, translateY(-620px)).
        void el.offsetWidth forces a style recalculation so the
        animation restarts cleanly when the class is re-added.    */
-    ['plate','tierBot','creamMid','tierTop','creamTop'].forEach(id => {
+    document.getElementById('stage').classList.remove('assembled');
+
+    ['plate','tierBot','creamMid','tierTop','creamTop','berryGroup'].forEach(id => {
         const el = document.getElementById(id);
         el.classList.remove('do-drop');
         void el.offsetWidth;
@@ -312,11 +318,11 @@ function toggleMusic() {
     musicOn = !musicOn;
 
     if (musicOn) {
-        btn.textContent = '🔇 Music';
+        btn.textContent = '🔇 Muzică';
         btn.classList.add('music-on');
         playMelody();
     } else {
-        btn.textContent = '🎵 Music';
+        btn.textContent = '🎵 Muzică';
         btn.classList.remove('music-on');
         /* Cancel loop and stop all active oscillators */
         clearTimeout(musicTimer);
