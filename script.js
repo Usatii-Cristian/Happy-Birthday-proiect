@@ -327,6 +327,8 @@ function replayAnim() {
 
 /* ================================================================
    6.  BACKGROUND MUSIC
+       Starts automatically on first user gesture (browser policy).
+       Button toggles mute/unmute; music loops forever once started.
    ================================================================ */
 let audioCtx   = null;
 let musicOn    = false;
@@ -376,22 +378,48 @@ function playMelody() {
     musicTimer = setTimeout(playMelody, (TOTAL_S - 0.15) * 1000);
 }
 
-function toggleMusic() {
+function updateMusicBtn(playing) {
     const btn = document.getElementById('musicBtn');
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-    musicOn = !musicOn;
-    if (musicOn) {
-        btn.innerHTML = '<i class="fas fa-volume-xmark"></i> Muzică';
+    if (playing) {
+        btn.innerHTML = '<i class="fas fa-volume-xmark"></i> Silențios';
         btn.classList.add('music-on');
-        playMelody();
     } else {
         btn.innerHTML = '<i class="fas fa-music"></i> Muzică';
         btn.classList.remove('music-on');
-        clearTimeout(musicTimer);
-        musicNodes.forEach(n => { try { n.stop(0); } catch (e) {} });
-        musicNodes = [];
     }
+}
+
+/* Start music — call only after a user gesture */
+function startMusic() {
+    if (musicOn) return;
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    audioCtx.resume().then(() => {
+        musicOn = true;
+        updateMusicBtn(true);
+        playMelody();
+    });
+}
+
+function stopMusic() {
+    musicOn = false;
+    updateMusicBtn(false);
+    clearTimeout(musicTimer);
+    musicNodes.forEach(n => { try { n.stop(0); } catch (e) {} });
+    musicNodes = [];
+}
+
+/* Button: if music is already playing → mute; otherwise start */
+function toggleMusic() {
+    if (musicOn) stopMusic(); else startMusic();
+}
+
+/* Auto-start on first user interaction anywhere on the page.
+   Listeners remove themselves after music starts. */
+function autoStart() {
+    startMusic();
+    ['click', 'touchstart', 'keydown', 'pointerdown'].forEach(evt =>
+        document.removeEventListener(evt, autoStart)
+    );
 }
 
 /* ================================================================
@@ -400,4 +428,9 @@ function toggleMusic() {
 window.addEventListener('load', () => {
     setupTitle();
     startAnimation();
+
+    /* Register auto-start on first gesture — covers click, tap, key */
+    ['click', 'touchstart', 'keydown', 'pointerdown'].forEach(evt =>
+        document.addEventListener(evt, autoStart, { passive: true })
+    );
 });
